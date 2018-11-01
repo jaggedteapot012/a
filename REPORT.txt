@@ -1,0 +1,10 @@
+- Describe how you keep track of open file offsets
+
+- Explain why it's a good idea to copy the exec args in kernel space
+  before performing the exec
+
+- List 3 security exposures that your implementation of exec addressed
+
+- What does mkfs/main.cc do?
+
+- Explain the role of opendir and readdir in mkfs/main.cc
