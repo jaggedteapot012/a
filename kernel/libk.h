@@ -12,9 +12,4 @@ public:
     static int isdigit(int c);
 };
 
-extern "C" {
-    inline long strlen(const char* str) { return K::strlen(str); }
-}
-
-
 #endif

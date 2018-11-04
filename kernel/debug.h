@@ -15,12 +15,10 @@ public:
     static void printf(const char* fmt, ...);
     static void vpanic(const char* fmt, va_list ap);
     static void panic(const char* fmt, ...);
-    static void shutdown(void) {
-        panic("\n");
-    }
     static void missing(const char* file, int line);
-    //static void vsay(const char* fmt, va_list ap);
-    //static void say(const char* fmt, ...);
+    static void vsay(const char* fmt, va_list ap);
+    static void say(const char* fmt, ...);
+    static void shutdown();
 
     static void init(OutputStream<char> *sink);
 

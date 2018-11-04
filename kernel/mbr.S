@@ -25,10 +25,7 @@ start:
     movb %dl,0x7000        # save boot drive id
 
     # print an 'x' to let the world know we're here
-    movb $'x',%al
-    movb $1,%ah
-    mov $0,%dx
-    int $0x14
+    call onex
 
     # read the drive parameters
     movw $30,0x6000
@@ -47,6 +44,7 @@ start:
 
     # read hdc into memory starting at loadKernelHere
 1:
+    call onex
     movw $0x6000,%si    # DAP pointer
     movb $16,(%si)        # size of buffer
     movb $0,1(%si)        # unused
@@ -83,6 +81,14 @@ start:
     mov %dx,memInfoDX
     mov $0x8000,%ax
     jmp *%ax
+onex:
+    pusha
+    movb $'x',%al
+    movb $1,%ah
+    mov $0,%dx
+    int $0x14
+    popa
+    ret
 end:
     .skip 510 - (end - start)
     .byte 0x55

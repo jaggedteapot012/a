@@ -20,7 +20,7 @@ class StrongPtr {
 
     void ref(PtrState<T>* s) {
         if (s != nullptr) {
-            s->count.add(1);
+            s->count.fetch_add(1);
         }
 
         PtrState<T>* old = state.exchange(s);
@@ -42,7 +42,11 @@ public:
     explicit StrongPtr(T* ptr) : state((ptr == nullptr) ? nullptr : new PtrState<T>(ptr)) {
     }
 
-    StrongPtr(const StrongPtr<T>& src) : state(nullptr) {
+    StrongPtr(StrongPtr<T>& src) : state(nullptr) {
+        ref(src.state.get());
+    }
+
+    StrongPtr(StrongPtr<T>&& src) : state(nullptr) {
         ref(src.state.get());
     }
 
@@ -58,7 +62,7 @@ public:
 
     T& operator * () { return *(state.get()->ptr); }
 
-    bool isNull() const { return state.get() == nullptr; }
+    bool isNull() { return state.get() == nullptr; }
 
     void reset() {
         ref(nullptr);

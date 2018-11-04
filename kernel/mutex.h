@@ -10,11 +10,4 @@ public:
     void unlock(void) { up(); }
 };
 
-class Mutexer {
-	Mutex& m;
-public:
-	inline Mutexer(Mutex& m) : m(m) { m.lock(); }
-	inline ~Mutexer() { m.unlock(); }
-};
-
 #endif

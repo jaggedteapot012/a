@@ -9,7 +9,7 @@ static int *array;
 static int len;
 static int safe = 0;
 static int avail = 0;
-static SpinLock heapLock;
+static InterruptSafeLock heapLock;
 
 void makeTaken(int i, int ints);
 void makeAvail(int i, int ints);
@@ -127,18 +127,14 @@ int isTaken(int i) {
     return array[i] < 0;
 }
 
-Atomic<int> nMalloc = 0;
-Atomic<int> nFree = 0;
-    
 void* malloc(size_t bytes) {
-    nMalloc.add(1);
     //Debug::printf("malloc(%d)\n",bytes);
     if (bytes == 0) return (void*) array;
 
     int ints = ((bytes + 3) / 4) + 2;
     if (ints < 4) ints = 4;
 
-    heapLock.lock();
+    bool was = heapLock.lock();
 
     void* res = 0;
 
@@ -178,16 +174,15 @@ void* malloc(size_t bytes) {
         res = &array[it+1];
     }
 
-    heapLock.unlock();
+    heapLock.unlock(was);
     return res;
 }
 
 void free(void* p) {
-    nFree.add(1);
     if (p == 0) return;
     if (p == (void*) array) return;
 
-    heapLock.lock();
+    bool was = heapLock.lock();
 
     int idx = ((((uintptr_t) p) - ((uintptr_t) array)) / 4) - 1;
     sanity(idx);
@@ -213,7 +208,7 @@ void free(void* p) {
     }
 
     makeAvail(idx,sz);
-    heapLock.unlock();
+    heapLock.unlock(was);
 }
 
 

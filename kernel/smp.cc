@@ -49,7 +49,6 @@ void SMP::init(bool isFirst) {
         apit_divide = (uint32_t *) (kConfig.localAPIC + 0x3e0);
 
         // Register spurious interrupt handler
-        IDT::interrupt(15, (uint32_t) spuriousHandler_);
         IDT::interrupt(0xff, (uint32_t) spuriousHandler_);
 
     }

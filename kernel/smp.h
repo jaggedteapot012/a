@@ -39,7 +39,7 @@ public:
 };
 
 
-template<typename T>
+template<class T>
 class PerCPU {
 private:
     T data[MAX_PROCS];

@@ -2,7 +2,6 @@
 #define _MACHINE_H_
 
 #include "stdint.h"
-#include "config.h"
 
 extern "C" void resetEIP(void);
 
@@ -22,19 +21,20 @@ extern "C" void spuriousHandler_(void);
 extern "C" void pageFaultHandler_(void);
 extern "C" void sysHandler_(void);
 
-extern "C" uint32_t cli(void);
-extern "C" uint32_t sti(void);
-extern "C" uint32_t restore(uint32_t flags);
-
 extern "C" void* memcpy(void *dest, const void* src, size_t n);
 extern "C" void* bzero(void *dest, size_t n);
 
-extern "C" [[noreturn]] void switchToUser(uint32_t pc, uint32_t esp, uint32_t eax);
+extern "C" void sti();
+extern "C" void cli();
+extern "C" uint32_t getFlags();
+extern bool disable();
+extern void enable(bool wasDisabled);
+
+extern "C" void switchToUser(uint32_t pc, uint32_t esp, uint32_t eax);
 
 extern "C" void ltr(uint32_t);
 
 extern uint32_t tssDescriptorBase;
-extern uint32_t tss;
-extern long kernelSS;
+extern uint32_t kernelSS;
 
 #endif

@@ -1,42 +1,45 @@
-#ifndef _QUEUE_H_
-#define _QUEUE_H_
+#ifndef _queue_h_
+#define _queue_h_
 
-#include "refs.h"
 #include "atomic.h"
 
-template <class T>
-class StrongQueue {
-    StrongPtr<T> head {};
-    StrongPtr<T> tail {};
-    SpinLock lock {};
+template <typename T>
+class Queue {
+    T* first = nullptr;
+    T* last = nullptr;
+    InterruptSafeLock lock;
 public:
-    StrongQueue() {}
+    Queue() : first(nullptr), last(nullptr), lock() {}
 
-    void add(StrongPtr<T> item) {
-        lock.lock();
-        item->next.reset();
-        if (tail.isNull()) {
-            head = item;
-            tail = item;
+    void add(T* t) {
+        InterruptSafeLocker x(lock);
+        t->next = nullptr;
+        if (first == nullptr) {
+            first = t;
         } else {
-            tail->next = item;
-            tail = item;
+            last->next = t;
         }
-        lock.unlock();
+        last = t;
     }
 
-    StrongPtr<T> remove() {
-        lock.lock();
-        StrongPtr<T> ptr = head;
-        if (!ptr.isNull()) {
-            head = ptr->next;
-            if (head.isNull()) {
-                tail.reset();
-            }
-            ptr->next.reset();
+    void addFront(T* t) {
+        InterruptSafeLocker x(lock);
+        t->next = first;
+        first = t;
+        if (last == nullptr) last = first;
+    }
+
+    T* remove() {
+        InterruptSafeLocker x(lock);
+        if (first == nullptr) {
+            return nullptr;
         }
-        lock.unlock();
-        return ptr;
+        auto it = first;
+        first = it->next;
+        if (first == nullptr) {
+            last = nullptr;
+        }
+        return it;
     }
 };
 
