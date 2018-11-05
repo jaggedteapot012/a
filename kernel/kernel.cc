@@ -38,17 +38,17 @@ StrongPtr<Node> getDir(StrongPtr<Node> node, const char* name) {
 
 void kernelMain(void) {
     StrongPtr<Ide> d { new Ide(3) };
-    Debug::printf("*** 0 mounting drive d\n");
+    Debug::printf("| 0 mounting drive d\n");
     auto fs = BobFS::mount(d);
     auto root = checkDir("/",BobFS::root(fs));
     auto sbin = getDir(root,"sbin");
     auto init = getFile(sbin,"init");
 
-    Debug::printf("*** 0 loading init\n");
+    Debug::printf("| 0 loading init\n");
     uint32_t e = ELF::load(init);
-    Debug::printf("*** 0 entry %x\n",e);
+    Debug::printf("| 0 entry %x\n",e);
     switchToUser(e,0xeffff000,0);
-    Debug::panic("*** 1000000000 implement switchToUser in machine.S\n");
+    Debug::panic("*** returned from switchToUser\n");
 }
 
 void kernelTerminate(void) {
