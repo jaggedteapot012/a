@@ -4,45 +4,106 @@
 #include "debug.h"
 #include "machine.h"
 
+int handleExit(uint32_t* frame) {
+    // void exit(int status)
+    return 0;
+}
+
+int handleWrite(uint32_t* frame) {
+    // int  write(fd, buffer, len)
+    return 0;
+}
+
+int handleFork() {
+    // int fork()
+    return 0;
+}
+
+int handleSem(uint32_t* frame) {
+    // int sem(uint32_t init)
+    return 0;
+}
+
+int handleUp(uint32_t* frame) {
+    // int up(int s)
+    return 0;
+}
+
+int handleDown(uint32_t* frame) {
+    // int down(int s)
+    return 0;
+}
+
+int handleClose(uint32_t* frame) {
+    // int close(int id)
+    return 0;
+}
+
+int handleShutdown() {
+    // int shutdown(void)
+    return 0;
+}
+
+int handleWait(uint32_t* frame) {
+    // int wait(int id, uint32_t *ptr)
+    return 0;
+}
+
+int handleExecl(uint32_t* frame) {
+    // int execl(const char* path, const char* arg0, ...)
+    return 0;
+}
+
+int handleOpen(uint32_t* frame) {
+    // int open(const char* fn)
+    return 0;
+}
+
+int handleLen(uint32_t* frame) {
+    // int len(int fs)
+    return 0;
+}
+
+int handleRead(uint32_t* frame) {
+    // int read(int fd, void* buffer, size_t n)
+    return 0;
+}
+
+int handleSeek(uint32_t* frame) {
+    // int32_t seek(int fd, int32_t off)
+    return 0;
+}
+
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
+    frame = (uint32_t*) frame[3];
     if (eax == 0) {
-        // void exit(int status)
-        uint32_t status = *(frame+1);
-        Debug::printf("| exiting with status %d\n", status);
-        Debug::shutdown();
+        return handleExit(frame);
     } else if (eax == 1) {
-        // int  write(fd, buffer, len)
-        uint32_t* userStack = (uint32_t*) frame[3];
-        //int32_t fd = userStack[1];
-        char* buffer = (char*) userStack[2];
-        uint32_t len = userStack[3];
-        for (uint32_t i = 0; i < len; i++)
-            Debug::printf("%c", *(buffer+i));
-        return len;
+        return handleWrite(frame);
     } else if (eax == 2) {
-        // int fork()
+        return handleFork();
     } else if (eax == 3) {
-        // int sem(uint32_t init)
+        return handleSem(frame);
     } else if (eax == 4) {
-        // int up(int s)
+        return handleUp(frame);
     } else if (eax == 5) {
-        // int down(int s)
+        return handleDown(frame);
     } else if (eax == 6) {
-        // int close(int id)
+        return handleClose(frame);
     } else if (eax == 7) {
-        // int shutdown(void)
+        return handleShutdown();
     } else if (eax == 8) {
-        // int wait(int id, uint32_t *ptr)
+        return handleWait(frame);
     } else if (eax == 9) {
-        // int execl(const char* path, const char* arg0, ...)
+        return handleExecl(frame);
     } else if (eax == 10) {
-        // int open(const char* fn)
+        return handleOpen(frame);
     } else if (eax == 11) {
-        // int len(int fs)
+        return handleLen(frame);
     } else if (eax == 12) {
-        // int read(int fd, void* buffer, size_t n)
+        return handleRead(frame);
     } else if (eax == 13) {
-        // int32_t seek(int fd, int32_t off)
+        return handleSeek(frame);
     } else {
         Debug::panic("*** unrecognized system call %d\n", eax);
     }
