@@ -13,7 +13,7 @@ int handleExit(uint32_t* frame) {
 }
 
 int handleWrite(uint32_t* frame) {
-    // int  write(fd, buffer, len)
+    // int write(fd, buffer, len)
     return 0;
 }
 
@@ -30,7 +30,7 @@ int handleSem(uint32_t* frame) {
 int handleUp(uint32_t* frame) {
     // int up(int s)
     int fd = frame[0];
-    FileDescriptor* FD = getFD(fd);
+    FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != sem_t)
         return -1;
     FD->semaphore->up();
@@ -40,7 +40,7 @@ int handleUp(uint32_t* frame) {
 int handleDown(uint32_t* frame) {
     // int down(int s)
     int fd = frame[0];
-    FileDescriptor* FD = getFD(fd);
+    FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != sem_t)
         return -1;
     FD->semaphore->down();
@@ -76,7 +76,7 @@ int handleOpen(uint32_t* frame) {
 int handleLen(uint32_t* frame) {
     // int len(int fs)
     int fd = frame[0];
-    FileDescriptor* FD = getFD(fd);
+    FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
         return -1;
     return FD->file->getSize();
@@ -125,7 +125,6 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
     } else {
         Debug::panic("*** unrecognized system call %d\n", eax);
     }
-
     return 0;
 }
 

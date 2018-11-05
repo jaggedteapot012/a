@@ -23,11 +23,15 @@ struct FileDescriptor {
     StrongPtr<Semaphore> semaphore;
 };
 
-struct Process {
+class Process {
+    int32_t allocFD();
     FileDescriptor fds[MAX_FDS];
+public:
+    FileDescriptor* getFD(int32_t fd);
+    int32_t newFile(StrongPtr<Node> file);
+    int32_t newSem(StrongPtr<Semaphore> sem);
 };
 
 Process* activeProcess();
-FileDescriptor* getFD(int32_t fd);
 
 #endif
