@@ -3,12 +3,14 @@
 
 #include "refs.h"
 #include "ide.h"
+#include "mutex.h"
 
 class BobFS;
 
 class Bitmap {
     BobFS* fs;
     uint32_t offset;
+    Mutex mutex;
 public:
     Bitmap(BobFS *fs, uint32_t offset);
     void clear(void);
@@ -17,9 +19,9 @@ public:
     int32_t find(void);
 };
 
-
 class Node {
     StrongPtr<BobFS> fs;
+    Mutex mutex;
     uint32_t inumber;
     uint32_t offset;
     uint32_t getBlockNumber(uint32_t blockIndex);

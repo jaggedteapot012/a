@@ -2,10 +2,13 @@
 #define _IDE_H_
 
 #include "stdint.h"
+#include "mutex.h"
 
 struct Ide {
+
     static constexpr uint32_t SectorSize = 512;
     uint32_t drive; /* 0 -> A, 1 -> B, 2 -> C, 3 -> D */
+    Mutex mutex;
 
     Ide(uint32_t drive) : drive(drive) {}
     
