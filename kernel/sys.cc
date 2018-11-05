@@ -27,11 +27,21 @@ int handleSem(uint32_t* frame) {
 
 int handleUp(uint32_t* frame) {
     // int up(int s)
+    int fd = frame[0];
+    FileDescriptor* FD = getFD(fd);
+    if (FD->filetype != sem_t)
+        return -1;
+    FD->semaphore->up();
     return 0;
 }
 
 int handleDown(uint32_t* frame) {
     // int down(int s)
+    int fd = frame[0];
+    FileDescriptor* FD = getFD(fd);
+    if (FD->filetype != sem_t)
+        return -1;
+    FD->semaphore->down();
     return 0;
 }
 

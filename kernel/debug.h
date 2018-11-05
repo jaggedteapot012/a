@@ -19,6 +19,7 @@ public:
     static void vsay(const char* fmt, va_list ap);
     static void say(const char* fmt, ...);
     static void shutdown();
+    static void assert(bool cond, const char* msg);
 
     static void init(OutputStream<char> *sink);
 

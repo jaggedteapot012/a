@@ -70,4 +70,8 @@ void Debug::missing(const char* file, int line) {
     panic("*** Missing code at %s:%d\n",file,line);
 }
 
+void Debug::assert(bool cond, const char* msg) {
+    if (!cond)
+        panic("*** assert failed: %s\n", msg);
+}
 

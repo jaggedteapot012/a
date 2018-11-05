@@ -6,6 +6,8 @@
 #include "semaphore.h"
 #include "bobfs.h"
 
+#define MAX_FDS 20
+
 enum Filetype {
     EMPTY,
     STDIN,
@@ -17,16 +19,15 @@ enum Filetype {
 
 struct FileDescriptor {
     Filetype filetype;
-    union data {
-        StrongPtr<Node> file;
-        StrongPtr<Semaphore> semaphore;
-    };
+    StrongPtr<Node> file;
+    StrongPtr<Semaphore> semaphore;
 };
 
 struct Process {
-    FileDescriptor fds[20];
+    FileDescriptor fds[MAX_FDS];
 };
 
 Process* activeProcess();
+FileDescriptor* getFD(int32_t fd);
 
 #endif
