@@ -24,6 +24,9 @@ int handleFork() {
 
 int handleSem(uint32_t* frame) {
     // int sem(uint32_t init)
+    uint32_t init = frame[0];
+    StrongPtr<Semaphore> sem { new Semaphore(init) };
+    activeProcess()->newSem(sem);
     return 0;
 }
 
