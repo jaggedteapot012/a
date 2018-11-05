@@ -4,6 +4,7 @@
 #include "atomic.h"
 #include "queue.h"
 #include "heap.h"
+#include "process.h"
 
 extern void threadsInit();
 
@@ -21,6 +22,7 @@ public:
     AddressSpace *addressSpace;
     virtual void start() = 0;
     virtual uint32_t interruptEsp() = 0;
+    Process* process;
     Thread();
     virtual ~Thread() {};
 };

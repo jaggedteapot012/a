@@ -3,6 +3,7 @@
 #include "idt.h"
 #include "debug.h"
 #include "machine.h"
+#include "process.h"
 
 int handleExit(uint32_t* frame) {
     // void exit(int status)
