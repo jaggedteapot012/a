@@ -13,7 +13,7 @@ StrongPtr<Node> checkFile(const char* name, StrongPtr<Node> node) {
     if (node->isDirectory()) {
         Debug::panic("*** 0 %s is a directory\n",name);
     }
-    Debug::printf("*** 0 file %s is ok\n",name);
+    Debug::printf("| 0 file %s is ok\n",name);
     return node;
 }
 
@@ -28,7 +28,7 @@ StrongPtr<Node> checkDir(const char* name, StrongPtr<Node> node) {
     if (!node->isDirectory()) {
         Debug::panic("*** 0 %s is not a directory\n",name);
     }
-    Debug::printf("*** 0 directory %s is ok\n",name);
+    Debug::printf("| 0 directory %s is ok\n",name);
     return node;
 }
 
