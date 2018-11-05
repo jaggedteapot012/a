@@ -68,7 +68,6 @@ public:
     }
 };
 
-
 class BobFS {
     StrongPtr<Ide> device;
     uint32_t dataBitmapBase;
@@ -77,7 +76,6 @@ class BobFS {
     uint32_t dataBase;
     Bitmap *inodeBitmap;
     Bitmap *dataBitmap;
-
 
     uint32_t allocateBlock(void);
 public:

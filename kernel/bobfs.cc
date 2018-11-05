@@ -2,6 +2,8 @@
 #include "libk.h"
 #include "heap.h"
 
+BobFS* fileSystem;
+
 uint8_t zero_1024[BobFS::BLOCK_SIZE];
 
 ////////////
@@ -393,8 +395,8 @@ uint32_t BobFS::allocateBlock(void) {
 }
 
 StrongPtr<BobFS> BobFS::mount(StrongPtr<Ide> device) {
-    StrongPtr<BobFS> fs { new BobFS(device) };
-    return fs;
+    fileSystem = new BobFS(device);
+    return StrongPtr<BobFS>(fileSystem);
 }
 
 StrongPtr<BobFS> BobFS::mkfs(StrongPtr<Ide> device) {

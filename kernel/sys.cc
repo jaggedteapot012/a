@@ -5,6 +5,8 @@
 #include "machine.h"
 #include "process.h"
 
+extern BobFS* fileSystem;
+
 int handleExit(uint32_t* frame) {
     // void exit(int status)
     return 0;
@@ -29,7 +31,7 @@ int handleUp(uint32_t* frame) {
     // int up(int s)
     int fd = frame[0];
     FileDescriptor* FD = getFD(fd);
-    if (FD->filetype != sem_t)
+    if (FD == nullptr || FD->filetype != sem_t)
         return -1;
     FD->semaphore->up();
     return 0;
@@ -39,7 +41,7 @@ int handleDown(uint32_t* frame) {
     // int down(int s)
     int fd = frame[0];
     FileDescriptor* FD = getFD(fd);
-    if (FD->filetype != sem_t)
+    if (FD == nullptr || FD->filetype != sem_t)
         return -1;
     FD->semaphore->down();
     return 0;
@@ -52,6 +54,7 @@ int handleClose(uint32_t* frame) {
 
 int handleShutdown() {
     // int shutdown(void)
+    Debug::shutdown();
     return 0;
 }
 
@@ -72,7 +75,11 @@ int handleOpen(uint32_t* frame) {
 
 int handleLen(uint32_t* frame) {
     // int len(int fs)
-    return 0;
+    int fd = frame[0];
+    FileDescriptor* FD = getFD(fd);
+    if (FD == nullptr || FD->filetype != file_t)
+        return -1;
+    return FD->file->getSize();
 }
 
 int handleRead(uint32_t* frame) {

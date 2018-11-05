@@ -3,8 +3,7 @@
 #include "bobfs.h"
 #include "elf.h"
 
-void kernelStart(void) {
-}
+void kernelStart(void) {}
 
 StrongPtr<Node> checkFile(const char* name, StrongPtr<Node> node) {
     if (node.isNull()) {
@@ -39,8 +38,8 @@ StrongPtr<Node> getDir(StrongPtr<Node> node, const char* name) {
 void kernelMain(void) {
     StrongPtr<Ide> d { new Ide(3) };
     Debug::printf("| 0 mounting drive d\n");
-    auto fs = BobFS::mount(d);
-    auto root = checkDir("/",BobFS::root(fs));
+    auto fileSystem = BobFS::mount(d);
+    auto root = checkDir("/",BobFS::root(fileSystem));
     auto sbin = getDir(root,"sbin");
     auto init = getFile(sbin,"init");
 
