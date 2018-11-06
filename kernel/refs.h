@@ -68,7 +68,7 @@ public:
         ref(nullptr);
     }
 
-    StrongPtr<T>& operator = (StrongPtr& src) {
+    StrongPtr<T>& operator = (StrongPtr src) {
         ref(src.state.get());
         return *this;
     }

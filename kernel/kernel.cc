@@ -2,6 +2,9 @@
 #include "ide.h"
 #include "bobfs.h"
 #include "elf.h"
+#include "kernel.h"
+
+KernelState* kernelState;
 
 void kernelStart(void) {}
 
@@ -37,9 +40,13 @@ StrongPtr<Node> getDir(StrongPtr<Node> node, const char* name) {
 
 void kernelMain(void) {
     StrongPtr<Ide> d { new Ide(3) };
+
+    /* Initialize kernelState to hold FS StrongPtr */
     Debug::printf("| 0 mounting drive d\n");
-    auto fileSystem = BobFS::mount(d);
-    auto root = checkDir("/",BobFS::root(fileSystem));
+    kernelState = new KernelState;
+    kernelState->kernelFS = BobFS::mount(d);
+
+    auto root = checkDir("/",BobFS::root(kernelState->kernelFS));
     auto sbin = getDir(root,"sbin");
     auto init = getFile(sbin,"init");
 

@@ -4,8 +4,73 @@
 #include "debug.h"
 #include "machine.h"
 #include "process.h"
+#include "bobfs.h"
+#include "heap.h"
+#include "libk.h"
+#include "kernel.h"
 
-extern BobFS* fileSystem;
+#define assert Debug::assert
+#define fs kernelState->kernelFS
+
+char* parseString(const char* cur, char term) {
+    const char* start = cur;
+    int sz = 0; 
+
+    int i = 0;
+    while (cur[i] != term && cur[i] != '\0') {
+        sz++; 
+        i++;
+    }
+
+    auto str = new char[sz+1];
+    cur = start;
+    for (int i = 0; i < sz; i++)
+        str[i] = cur[i];
+    str[sz] = '\0';
+
+    Debug::printf("*** Parsed string: '%s'\n", str);
+    return str;
+}
+
+StrongPtr<Node> parseNode(const char* fn) {
+    assert(fn[0] == '/', "Filepath must be absolute!");
+    auto len = K::strlen(fn);
+
+    // For parsing through file path.
+    const char* curInd = fn+1;
+    char* curName = parseString(curInd, '/');  // Read up to '/'
+    auto curDir = BobFS::root(fs);
+
+    auto curNode = curDir->findNode(curName);
+    curInd += K::strlen(curName) + 1;
+
+    while (curInd - fn < len) {
+        // Create subdirectory if it does not exist.
+        if (curNode.isNull()) {
+            Debug::printf("*** directory %s does not exist, creating it!\n", curName);
+            curNode = curDir->newDirectory(curName);
+        }
+
+        // Move to next file in path.
+        free(curName);
+        curName = parseString(curInd, '/');
+        curInd += K::strlen(curName) + 1;
+
+        // Find next node.
+        curDir = curNode;
+        curNode = curDir->findNode(curName);
+
+    }
+
+    if (curNode.isNull()) {
+        Debug::printf("*** file %s does not exist, creating it!\n", curName);
+        curNode = curDir->newFile(curName);
+        assert(curNode->isFile(), "File not created!\n");
+    }
+
+    free(curName);
+    return curNode;
+}
 
 int handleExit(uint32_t* frame) {
     // void exit(int status)
@@ -73,6 +138,27 @@ int handleExecl(uint32_t* frame) {
 
 int handleOpen(uint32_t* frame) {
     // int open(const char* fn)
+    kernelState->fsLock.lock();
+
+    //auto path = parseString((char*) frame, '\0');
+    auto node = parseNode("/randomDir/something");
+    Debug::printf("*** isDir: %d\n", node->isDirectory());
+    Debug::printf("*** isFile: %d\n", node->isFile());
+    Debug::printf("*** links: %lu\n", node->getLinks());
+    Debug::printf("*** size: %lu\n", node->getSize());
+
+    //free(path);
+
+    Debug::panic("");
+
+
+    //StrongPtr<Node> f = parseNode(fileName);
+
+
+    //StrongPtr<Node> file { new Semaphore(init) };
+    //activeProcess()->newFile(sem);
+
+    kernelState->fsLock.unlock();
     return 0;
 }
 
