@@ -79,9 +79,28 @@ int handleExit(uint32_t* frame) {
 }
 
 int handleWrite(uint32_t* frame) {
-    // int write(fd, buffer, len)
-    Debug::panic("*** Calling write\n");
-    return 0;
+    // int write(fd, buffer, nbytes)
+    int fd = frame[1];
+    void* buf = (void*) frame[2];
+    uint32_t len = frame[3];
+
+    uint32_t bytesWritten = 0;
+    
+    if (fd == 1 || fd == 2) {
+        // For writing to stdin and stderr.
+        char* buffer = (char*) buf;
+        while (bytesWritten < len) {
+            Debug::printf("%c", buffer[bytesWritten++]);
+        }
+    } else {
+        // For writing to a file.
+        FileDescriptor* FD = activeProcess()->getFD(fd);
+        if (FD == nullptr || FD->filetype != file_t)
+            return -1;
+        bytesWritten = FD->file->writeAll(FD->offset, buf, len);
+    }
+
+    return (int) bytesWritten;
 }
 
 int handleFork() {
@@ -119,8 +138,14 @@ int handleDown(uint32_t* frame) {
 
 int handleClose(uint32_t* frame) {
     // int close(int id)
-    Debug::panic("*** Calling close!\n");
-    return 0;
+    int fd = frame[1];
+
+    FileDescriptor* FD = activeProcess()->getFD(fd);
+    if (FD == nullptr || (FD->filetype != file_t && FD->filetype != sem_t))
+        return -1;
+
+    // Free index in FD table.
+    return activeProcess()->closeFD(fd);
 }
 
 int handleShutdown() {
@@ -154,7 +179,7 @@ int handleOpen(uint32_t* frame) {
 
 int handleLen(uint32_t* frame) {
     // int len(int fs)
-    int fd = frame[0];
+    int fd = frame[1];
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
         return -1;
@@ -163,13 +188,33 @@ int handleLen(uint32_t* frame) {
 
 int handleRead(uint32_t* frame) {
     // int read(int fd, void* buffer, size_t n)
-    Debug::panic("*** Calling read!\n");
-    return 0;
+    int fd = frame[1];
+    void* buf = (void*) frame[2];
+    uint32_t len = frame[3];
+
+
+    FileDescriptor* FD = activeProcess()->getFD(fd);
+    if (FD == nullptr || FD->filetype != file_t)
+        return -1;
+
+    int bytesRead = FD->file->readAll(FD->offset, buf, len);
+
+    FD->offset += bytesRead;
+
+    return bytesRead;
 }
 
 int handleSeek(uint32_t* frame) {
     // int32_t seek(int fd, int32_t off)
-    Debug::panic("*** Calling seek!\n");
+    int fd = frame[1];
+    int off = frame[3];
+
+    FileDescriptor* FD = activeProcess()->getFD(fd);
+    if (FD == nullptr || FD->filetype != file_t)
+        return -1;
+
+    FD->offset = off;
+
     return 0;
 }
 
@@ -198,6 +243,7 @@ extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
         default:
             Debug::panic("*** unrecognized system call %d\n", eax);
     }
+
     return ret;
 }
 

@@ -16,13 +16,10 @@ Bitmap::Bitmap(BobFS* fs, uint32_t offset) :
 }
 
 void Bitmap::clear(void) {
-    mutex.lock();
     fs->device->writeAll(offset,zero_1024,BobFS::BLOCK_SIZE);
-    mutex.unlock();
 }
 
 void Bitmap::set(int32_t index) {
-    mutex.lock();
     uint32_t wordOffset = (index/32)*4;
     uint32_t bitIndex = index%32;
 
@@ -33,11 +30,9 @@ void Bitmap::set(int32_t index) {
     word |= (1 << bitIndex);
 
     fs->device->writeAll(offset+wordOffset,&word,sizeof(word));
-    mutex.unlock();
 }
 
 void Bitmap::clear(int32_t index) {
-    mutex.lock();
     uint32_t wordOffset = (index/32) * 4; 
     uint32_t bitIndex = index%32;
 
@@ -48,11 +43,9 @@ void Bitmap::clear(int32_t index) {
     word &= ~(1 << bitIndex);
 
     fs->device->writeAll(offset+wordOffset,&word,sizeof(word));
-    mutex.unlock();
 }
 
 int32_t Bitmap::find(void) {
-    mutex.lock();
     for (uint32_t i=0; i<BobFS::BLOCK_SIZE; i += 4) {
         uint32_t word;
         fs->device->readAll(offset+i,&word,sizeof(word));
@@ -62,14 +55,12 @@ int32_t Bitmap::find(void) {
                 if ((word & mask) == 0) {
                     word |= mask;
                     fs->device->writeAll(offset+i,&word,sizeof(word));
-                    mutex.unlock();
                     return i * 8 + j;
                 }
                 mask = mask * 2;
             }
         }
     }
-    mutex.unlock();
     return -1;
 }
 
@@ -210,7 +201,6 @@ uint32_t Node::getBlockNumber(uint32_t blockIndex) {
 }
             
 int32_t Node::write(uint32_t offset, const void* buffer, uint32_t n) {
-    mutex.lock();
     uint32_t blockIndex = offset / BobFS::BLOCK_SIZE;
     uint32_t start = offset % BobFS::BLOCK_SIZE;
     uint32_t end = start + n;
@@ -223,7 +213,6 @@ int32_t Node::write(uint32_t offset, const void* buffer, uint32_t n) {
                blockNumber*BobFS::BLOCK_SIZE+start,
                buffer,
                count);
-    mutex.unlock();
     if (x < 0) return x;
 
     uint32_t newSize = offset + x;
@@ -252,7 +241,6 @@ int32_t Node::writeAll(uint32_t offset, const void* buffer_, uint32_t n) {
 }
 
 int32_t Node::read(uint32_t offset, void* buffer, uint32_t n) {
-    mutex.lock();
     uint32_t sz = getSize();
     if (sz <= offset) return 0;
 
@@ -268,7 +256,6 @@ int32_t Node::read(uint32_t offset, void* buffer, uint32_t n) {
     uint32_t blockNumber = getBlockNumber(blockIndex);
 
     auto result = fs->device->read(blockNumber*BobFS::BLOCK_SIZE+start, buffer, count);
-    mutex.unlock();
     return result;
 }
 
@@ -369,7 +356,6 @@ BobFS::BobFS(StrongPtr<Ide> device) :
     inodeBase(3 * BLOCK_SIZE),
     dataBase(3 * BLOCK_SIZE + Node::SIZE * BLOCK_SIZE * 8)
 {
-    device->mutex.lock();
     dataBitmap = new Bitmap(this,dataBitmapBase);
     inodeBitmap = new Bitmap(this,inodeBitmapBase);
 }
@@ -377,7 +363,6 @@ BobFS::BobFS(StrongPtr<Ide> device) :
 BobFS::~BobFS() {
     delete dataBitmap;
     delete inodeBitmap;
-    device->mutex.unlock();
 }
 
 StrongPtr<Node> BobFS::root(StrongPtr<BobFS> fs) {

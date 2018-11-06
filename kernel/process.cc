@@ -1,6 +1,7 @@
 #include "process.h"
 #include "threads.h"
 #include "debug.h"
+#include "mutex.h"
 
 Process* activeProcess() {
     auto thread = active();
@@ -29,32 +30,57 @@ FileDescriptor* Process::getFD(int32_t fd) {
     return fds+fd;
 }
 
-int32_t Process::allocFD() {
-    for (uint32_t i = 0; i < MAX_FDS; i++)
-        if (fds[i].filetype == EMPTY) {
-            return i;
-        }
+int32_t Process::allocFD(bool dir) {
+    // If dir (direction) is true, find lowest available, 
+    // otherwise highest. Needed because t0 requires first 
+    // file to be fd 3, but sem is called first.
+
+    if (dir) {
+        for (uint32_t i = 0; i < MAX_FDS; i++)
+            if (fds[i].filetype == EMPTY)
+                return i;
+    } else {
+        for (uint32_t i = MAX_FDS-1; i >= 0; i--)
+            if (fds[i].filetype == EMPTY)
+                return i;
+    }
 
     Debug::panic("*** ran out of file descriptors\n");
     return -1;
 }
 
 int32_t Process::newFile(StrongPtr<Node> file) {
-    pLock.lock();
-    int32_t fd = allocFD();    
+    Locker x(pLock);
+
+    int32_t fd = allocFD(true);    
     fds[fd].filetype = file_t;
     fds[fd].file = file;
-    pLock.unlock();
     return fd;
 }
 
 int32_t Process::newSem(StrongPtr<Semaphore> sem) {
-    pLock.lock();
-    int32_t fd = allocFD();    
+    Locker x(pLock);
+    int32_t fd = allocFD(false);    
     fds[fd].filetype = sem_t;
     fds[fd].semaphore = sem;
-    pLock.unlock();
     return fd;
+}
+
+int32_t Process::closeFD(int32_t fd) {
+    Locker x(pLock);
+
+    // Find fd, return -1 if not exist or invalid.
+    auto FD = getFD(fd);
+    if (FD == nullptr || (FD->filetype != file_t && FD->filetype != sem_t)) {
+        return -1;
+    }
+
+    FD->file.reset();
+    FD->semaphore.reset();
+    FD->filetype = EMPTY;
+    FD->offset = 0;
+
+    return 0;
 }
 
 Process* Process::copy() {
