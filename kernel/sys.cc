@@ -46,10 +46,11 @@ StrongPtr<Node> parseNode(const char* fn) {
     curInd += K::strlen(curName) + 1;
 
     while (curInd - fn < len) {
-        // Create subdirectory if it does not exist.
+        // O_CREAT is false, fail if file does not exist.
         if (curNode.isNull()) {
+            return curNode;
             //Debug::printf("*** directory %s does not exist, creating it!\n", curName);
-            curNode = curDir->newDirectory(curName);
+            //curNode = curDir->newDirectory(curName);
         }
 
         // Move to next file in path.
@@ -64,9 +65,10 @@ StrongPtr<Node> parseNode(const char* fn) {
     }
 
     if (curNode.isNull()) {
+        // O_CREAT is false, fail if file does not exist.
+        return curNode;
         //Debug::printf("*** file %s does not exist, creating it!\n", curName);
-        curNode = curDir->newFile(curName);
-        assert(curNode->isFile(), "File not created!\n");
+        //curNode = curDir->newFile(curName);
     }
 
     free(curName);
@@ -87,7 +89,7 @@ int handleWrite(uint32_t* frame) {
     uint32_t bytesWritten = 0;
     
     if (fd == 1 || fd == 2) {
-        // For writing to stdin and stderr.
+        // For writing to stdout and stderr.
         char* buffer = (char*) buf;
         while (bytesWritten < len) {
             Debug::printf("%c", buffer[bytesWritten++]);
@@ -172,6 +174,9 @@ int handleOpen(uint32_t* frame) {
     auto node = parseNode(path);
     free(path);
 
+    // File did not exist.
+    if (node.isNull())
+        return -1;
 
     int32_t fd = activeProcess()->newFile(node);
     return fd;
@@ -192,6 +197,9 @@ int handleRead(uint32_t* frame) {
     void* buf = (void*) frame[2];
     uint32_t len = frame[3];
 
+    // Cannot read from STDIN/STDOUT
+    if (fd < 3)
+        return -1;
 
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
@@ -208,6 +216,10 @@ int handleSeek(uint32_t* frame) {
     // int32_t seek(int fd, int32_t off)
     int fd = frame[1];
     int off = frame[2];
+
+    // Cannot seek in STDIN/STDOUT
+    if (fd < 3)
+        return -1;
 
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
