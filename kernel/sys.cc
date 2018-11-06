@@ -207,7 +207,7 @@ int handleRead(uint32_t* frame) {
 int handleSeek(uint32_t* frame) {
     // int32_t seek(int fd, int32_t off)
     int fd = frame[1];
-    int off = frame[3];
+    int off = frame[2];
 
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
@@ -215,7 +215,7 @@ int handleSeek(uint32_t* frame) {
 
     FD->offset = off;
 
-    return 0;
+    return off;
 }
 
 extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
