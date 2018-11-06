@@ -75,6 +75,33 @@ void AddressSpace::activate() {
     vmm_on((uint32_t)pd);
 }
 
+AddressSpace* AddressSpace::copy() {
+    AddressSpace* result = new AddressSpace(false);
+    
+    // walk the pd, looking for page tables
+    for (uint32_t i = 512; i < 960; i++) {
+        uint32_t pde = pd[i];
+        if (pde & P) {
+            // create page table and add to pd
+            uint32_t* newPT = (uint32_t*) VMM::alloc();
+            result->pd[i] = (uint32_t) newPT | U | W | P;
+
+            uint32_t* oldPT = (uint32_t*) (pde & 0xfffff000);
+            for (uint32_t j = 0; j < VMM::FRAME_SIZE/4; j++) {
+                uint32_t pte = oldPT[j];
+                if (pte & P) {
+                    // copy over data
+                    uint32_t* oldPage = (uint32_t*) (pte & 0xfffff000);
+                    uint32_t* newPage = (uint32_t*) VMM::alloc();
+                    newPT[j] = (uint32_t) newPage | U | W | P;
+                    memcpy(newPage, oldPage, VMM::FRAME_SIZE);
+                }
+            }
+        }
+    }
+    return result;
+}
+
 AddressSpace::AddressSpace(bool isShared) : lock() {
     pd = (uint32_t*) VMM::alloc();
     if (isShared) {
@@ -141,8 +168,6 @@ void AddressSpace::pmap(uint32_t va, uint32_t pa, bool forUser, bool forWrite) {
 
     if ((pte & 1) == 0) 
         pte = (pa & 0xfffff000) | (forUser ? U : 0) | (forWrite ? W : 0) | 1;
-
-
 }
 
 void AddressSpace::handlePageFault(uint32_t va_) {
@@ -159,7 +184,6 @@ void AddressSpace::handlePageFault(uint32_t va_) {
     }
 
     lock.unlock();
-
 }
 
 extern "C" void vmm_pageFault(uintptr_t va, uintptr_t *saveState) {

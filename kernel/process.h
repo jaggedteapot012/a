@@ -30,6 +30,7 @@ public:
     FileDescriptor* getFD(int32_t fd);
     int32_t newFile(StrongPtr<Node> file);
     int32_t newSem(StrongPtr<Semaphore> sem);
+    Process* copy();
 };
 
 Process* activeProcess();

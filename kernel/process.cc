@@ -34,3 +34,9 @@ int32_t Process::newSem(StrongPtr<Semaphore> sem) {
     fds[fd].semaphore = sem;
     return fd;
 }
+
+Process* Process::copy() {
+    Process* result = new Process();
+    memcpy(result->fds, fds, MAX_FDS*sizeof(FileDescriptor));
+    return result;
+}

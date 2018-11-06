@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "heap.h"
 #include "process.h"
+#include "vmm.h"
 
 extern void threadsInit();
 
@@ -25,6 +26,11 @@ public:
     Process* process;
     Thread();
     virtual ~Thread() {};
+    
+    Thread(Thread* parent) {
+        addressSpace = parent->addressSpace->copy();
+        process = parent->process->copy();
+    }
 };
 
 template <typename T>

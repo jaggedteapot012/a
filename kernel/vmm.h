@@ -55,6 +55,9 @@ public:
 
     // Make this address space active, should be called when context-switching
     void activate();
+
+    // Copy all the contents of this address space, returning the copy
+    AddressSpace* copy();
 };
 
 #endif
