@@ -5,6 +5,7 @@
 #include "refs.h"
 #include "semaphore.h"
 #include "bobfs.h"
+#include "mutex.h"
 
 #define MAX_FDS 20
 
@@ -26,7 +27,9 @@ struct FileDescriptor {
 class Process {
     int32_t allocFD();
     FileDescriptor fds[MAX_FDS];
+    Mutex pLock;
 public:
+    Process();
     FileDescriptor* getFD(int32_t fd);
     int32_t newFile(StrongPtr<Node> file);
     int32_t newSem(StrongPtr<Semaphore> sem);
