@@ -8,7 +8,6 @@
 #include "heap.h"
 #include "libk.h"
 #include "kernel.h"
-#include "fcntl.h"
 
 #define assert Debug::assert
 #define fs kernelState->kernelFS
