@@ -7,7 +7,8 @@
 #include "bobfs.h"
 #include "mutex.h"
 
-#define MAX_FDS 20
+// 10 sem, 10 files, but 0-2 are reserved
+#define MAX_FDS 30
 
 enum Filetype {
     EMPTY,
