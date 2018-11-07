@@ -48,8 +48,6 @@ public:
     ThreadImpl(T work, Thread* parent) : work(work) {
         addressSpace = parent->addressSpace->copy();
         process = parent->process->copy();
-        // TODO: not sure that we need this
-        //memcpy(stack, parent->stack, 8192);
     }
 };
 

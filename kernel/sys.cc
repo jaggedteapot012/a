@@ -10,6 +10,7 @@
 #include "kernel.h"
 #include "threads.h"
 #include "future.h"
+#include "elf.h"
 
 #define assert Debug::assert
 #define fs kernelState->kernelFS
@@ -79,7 +80,9 @@ StrongPtr<Node> parseNode(const char* fn) {
 
 int handleExit(uint32_t* frame) {
     // void exit(int status)
-    Debug::panic("*** Calling exit!\n");
+    int32_t status = frame[1];
+    activeProcess()->setStatus(status);
+    stop();
     return 0;
 }
 
@@ -177,27 +180,71 @@ int handleClose(uint32_t* frame) {
 
 int handleShutdown() {
     // int shutdown(void)
+    // TODO: fix this depending on piazza answer
+    Debug::printf("*** 2000000000 shutdown\n");
     Debug::shutdown();
     return 0;
 }
 
 int handleWait(uint32_t* frame) {
-    // int wait(int id, uint32_t *ptr)
-    return 0;
+    // int wait(int id, int32_t *ptr)
+    uint32_t pid = frame[1];
+    int32_t* ptr = (int32_t*) frame[2];
+    return Process::getStatus(pid, ptr);
 }
 
 int handleExecl(uint32_t* frame) {
     // int execl(const char* path, const char* arg0, ...)
-    Debug::panic("*** Calling execl!\n");
+    const char* path = (char*) frame[1];
+    StrongPtr<Node> exec = parseNode(path);
+    if (exec.isNull())
+        return -1;
+
+    /* drop existing user-space mappings
+     * load user-program
+     * push arguments on stack */
+    uint32_t i = 2;
+    while (frame[i] != 0) i++;
+    uint32_t numArgs = i-2;
+    char* args[numArgs];
+    for (i = 2; i < 2+numArgs; i++) {
+        args[i-2] = parseString((char*) frame[i], 0);
+    }
+    
+    Thread* me = active();
+    me->addressSpace->erase();
+    uint32_t e = ELF::load(exec);
+    char* topOfStack = (char*) 0xeffff000;
+    char* userArgs[numArgs];
+    for (i = 0; i < numArgs; i++) {
+        char* str = args[i];
+        uint32_t len = K::strlen(str)+1;
+        topOfStack -= len;
+        userArgs[i] = topOfStack+1;
+        memcpy(topOfStack+1, str, len);
+        free(str);
+    }
+
+    uint32_t* stack = (uint32_t*) ((uint32_t)topOfStack - ((uint32_t)topOfStack%4)-4);
+    stack -= numArgs-1;
+    for (i = 0; i < numArgs; i++) {
+        stack[i] = (uint32_t) userArgs[i];
+    }
+    stack -= 1;
+    *stack = (uint32_t) (stack+1);
+    stack -= 1;
+    *stack = numArgs;
+    switchToUser(e, (uint32_t)stack, 0);
+    
+    assert(false, "failed to switch to user");
     return 0;
 }
 
 int handleOpen(uint32_t* frame) {
     // int open(const char* fn)
 
-    auto path = parseString((char*) frame[1], '\0');
+    auto path = (char*) frame[1];
     auto node = parseNode(path);
-    free(path);
 
     // File did not exist.
     if (node.isNull())

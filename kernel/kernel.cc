@@ -57,5 +57,4 @@ void kernelMain(void) {
     Debug::panic("*** returned from switchToUser\n");
 }
 
-void kernelTerminate(void) {
-}
+void kernelTerminate(void) {}

@@ -6,9 +6,11 @@
 #include "semaphore.h"
 #include "bobfs.h"
 #include "mutex.h"
+#include "future.h"
 
 // 10 sem, 10 files, but 0-2 are reserved
 #define MAX_FDS 30
+#define MAX_PROCESSES 100
 
 enum Filetype {
     EMPTY,
@@ -27,17 +29,21 @@ struct FileDescriptor {
 };
 
 class Process {
+    static Future<int32_t>* statuses[MAX_PROCESSES];
     int32_t allocFD(bool dir);
     FileDescriptor fds[MAX_FDS];
     Mutex pLock;
 public:
-    Process();
+    static Atomic<int32_t> pidAllocator;
+    static int32_t getStatus(uint32_t pid, int32_t* ptr);
+    void setStatus(int32_t status);
+
+    int32_t pid;
     FileDescriptor* getFD(int32_t fd);
     int32_t closeFD(int32_t fd);
     int32_t newFile(StrongPtr<Node> file);
     int32_t newSem(StrongPtr<Semaphore> sem);
-    int32_t pid;
-    static Atomic<int32_t> pidAllocator;
+    Process();
     StrongPtr<Process> copy();
 };
 

@@ -2,10 +2,12 @@
 #include "threads.h"
 #include "debug.h"
 #include "mutex.h"
+#include "heap.h"
 
 // Initialize bump allocator for pids.
 #define PID_START 1000  // start at 1000 so it's obviously a PID
 Atomic<int32_t> Process::pidAllocator {0};
+Future<int32_t>* Process::statuses[MAX_PROCESSES];
 
 StrongPtr<Process> activeProcess() {
     auto thread = active();
@@ -27,6 +29,23 @@ Process::Process() : pLock() {
 
     // Initialize PID.
     pid = Process::pidAllocator.fetch_add(1) + PID_START;
+    statuses[pid-PID_START] = new Future<int32_t>();
+    if (pid >= (PID_START+MAX_PROCESSES)) {
+        Debug::panic("*** no more available processes\n");
+    }
+}
+
+int32_t Process::getStatus(uint32_t pid, int32_t* ptr) {
+    uint32_t index = pid - PID_START;
+    if (index >= MAX_PROCESSES || statuses[index] == nullptr)
+        return -1;
+    *ptr = statuses[index]->get();
+    return 0;
+}
+
+void Process::setStatus(int32_t status) {
+    uint32_t index = pid - PID_START;
+    statuses[index]->set(status);
 }
 
 FileDescriptor* Process::getFD(int32_t fd) {

@@ -102,6 +102,26 @@ AddressSpace* AddressSpace::copy() {
     return result;
 }
 
+void AddressSpace::erase() {
+    // walk the pd, looking for page tables
+    for (uint32_t i = 512; i < 960; i++) {
+        uint32_t pde = pd[i];
+        if (pde & P) {
+            // free physical pages in pts, and then free pt
+            uint32_t* pt = (uint32_t*) (pde & 0xfffff000);
+            for (uint32_t j = 0; j < VMM::FRAME_SIZE/4; j++) {
+                uint32_t pte = pt[j];
+                if (pte & P) {
+                    uint32_t page = (pte & 0xfffff000);
+                    VMM::free(page);
+                }
+            }
+            VMM::free((uint32_t) pt);
+            pd[i] = 0;
+        }
+    }
+}
+
 AddressSpace::AddressSpace(bool isShared) : lock() {
     pd = (uint32_t*) VMM::alloc();
     if (isShared) {

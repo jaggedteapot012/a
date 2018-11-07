@@ -58,6 +58,9 @@ public:
 
     // Copy all the contents of this address space, returning the copy
     AddressSpace* copy();
+
+    // Erase all the user-space mappings
+    void erase();
 };
 
 #endif
