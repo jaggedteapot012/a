@@ -106,18 +106,28 @@ int handleWrite(uint32_t* frame) {
     return (int) bytesWritten;
 }
 
-extern Thread* active();
-extern void schedule(Thread*);
+// there's probably a cleaner way to do this, but it works sooooo
+template <typename T>
+static void createChild(T work) { 
+    reaper();
+    auto child = new ThreadImpl<T>(work, active());
+    long *topOfStack = &child->stack[2045];
+    topOfStack[0] = 0x200;       // sti
+    topOfStack[1] = 0;           // cr2
+    topOfStack[2] = (long)entry;
+    child->esp = (long) topOfStack;
+    schedule(child);
+}
 
 int handleFork(uint32_t* intFrame) {
     // int fork()
-    // TODO: find return pc and esp
-    auto child = new ThreadImpl([pc, esp] {
-        switchToUser(pc, esp, 0);     
+    uint32_t pc = intFrame[0];
+    uint32_t esp = intFrame[3];
+    createChild([pc, esp]() {
+        switchToUser(pc, esp, 0);
     });
-    schedule(child);
     // TODO: should return pid of child
-    return 0;
+    return 1;
 }
 
 int handleSem(uint32_t* frame) {
@@ -168,7 +178,6 @@ int handleShutdown() {
 
 int handleWait(uint32_t* frame) {
     // int wait(int id, uint32_t *ptr)
-    Debug::panic("*** Calling wait!\n");
     return 0;
 }
 

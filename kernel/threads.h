@@ -32,8 +32,8 @@ public:
 template <typename T>
 class ThreadImpl : public Thread {
     T work;
-    long stack[2048];
 public:
+    long stack[2048];
     virtual void start() override {
         work();
     }
