@@ -95,7 +95,7 @@ int handleWrite(uint32_t* frame) {
     uint32_t bytesWritten = 0;
     FileDescriptor* FD = activeProcess()->getFD(fd);
     
-    if (FD->filetype == STDIN || FD->filetype == STDOUT) {
+    if (FD->filetype == STDERR || FD->filetype == STDOUT) {
         // For writing to stdout and stderr.
         char* buffer = (char*) buf;
         while (bytesWritten < len) {
