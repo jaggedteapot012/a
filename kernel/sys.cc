@@ -9,6 +9,7 @@
 #include "libk.h"
 #include "kernel.h"
 #include "threads.h"
+#include "future.h"
 
 #define assert Debug::assert
 #define fs kernelState->kernelFS
@@ -109,7 +110,7 @@ int handleWrite(uint32_t* frame) {
 
 // there's probably a cleaner way to do this, but it works sooooo
 template <typename T>
-static void createChild(T work) { 
+void createChild(T work, Future<int32_t>& childPid) { 
     reaper();
     auto child = new ThreadImpl<T>(work, active());
     long *topOfStack = &child->stack[2045];
@@ -118,17 +119,20 @@ static void createChild(T work) {
     topOfStack[2] = (long)entry;
     child->esp = (long) topOfStack;
     schedule(child);
+    
+    childPid.set(child->process->pid);
 }
 
 int handleFork(uint32_t* intFrame) {
     // int fork()
     uint32_t pc = intFrame[0];
     uint32_t esp = intFrame[3];
+    Future<int32_t> childPid;
     createChild([pc, esp]() {
         switchToUser(pc, esp, 0);
-    });
-    // TODO: should return pid of child
-    return 1;
+    }, childPid);
+
+    return childPid.get();
 }
 
 int handleSem(uint32_t* frame) {

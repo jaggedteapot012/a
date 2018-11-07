@@ -3,6 +3,10 @@
 #include "debug.h"
 #include "mutex.h"
 
+// Initialize bump allocator for pids.
+#define PID_START 1000  // start at 1000 so it's obviously a PID
+Atomic<int32_t> Process::pidAllocator {0};
+
 StrongPtr<Process> activeProcess() {
     auto thread = active();
     if (thread->process.isNull()) {
@@ -21,6 +25,8 @@ Process::Process() : pLock() {
     for (int i = 3; i < MAX_FDS; i++) 
         fds[i].filetype = EMPTY;
 
+    // Initialize PID.
+    pid = Process::pidAllocator.fetch_add(1) + PID_START;
 }
 
 FileDescriptor* Process::getFD(int32_t fd) {

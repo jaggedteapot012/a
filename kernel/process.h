@@ -36,6 +36,8 @@ public:
     int32_t closeFD(int32_t fd);
     int32_t newFile(StrongPtr<Node> file);
     int32_t newSem(StrongPtr<Semaphore> sem);
+    int32_t pid;
+    static Atomic<int32_t> pidAllocator;
     StrongPtr<Process> copy();
 };
 
