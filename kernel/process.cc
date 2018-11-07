@@ -3,10 +3,10 @@
 #include "debug.h"
 #include "mutex.h"
 
-Process* activeProcess() {
+StrongPtr<Process> activeProcess() {
     auto thread = active();
-    if (thread->process == nullptr) {
-        thread->process = new Process();
+    if (thread->process.isNull()) {
+        thread->process = StrongPtr<Process> { new Process() };
     }
     return thread->process;
 }
@@ -83,8 +83,8 @@ int32_t Process::closeFD(int32_t fd) {
     return 0;
 }
 
-Process* Process::copy() {
-    Process* result = new Process();
+StrongPtr<Process> Process::copy() {
+    StrongPtr<Process> result = StrongPtr<Process> { new Process() };
     for (uint32_t i = 0; i < MAX_FDS; i++) {
         result->fds[i].filetype = fds[i].filetype;
         result->fds[i].file = fds[i].file;

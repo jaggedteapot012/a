@@ -36,9 +36,9 @@ public:
     int32_t closeFD(int32_t fd);
     int32_t newFile(StrongPtr<Node> file);
     int32_t newSem(StrongPtr<Semaphore> sem);
-    Process* copy();
+    StrongPtr<Process> copy();
 };
 
-Process* activeProcess();
+StrongPtr<Process> activeProcess();
 
 #endif

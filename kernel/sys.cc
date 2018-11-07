@@ -78,6 +78,7 @@ StrongPtr<Node> parseNode(const char* fn) {
 
 int handleExit(uint32_t* frame) {
     // void exit(int status)
+    Debug::panic("*** Calling exit!\n");
     return 0;
 }
 
@@ -183,6 +184,7 @@ int handleWait(uint32_t* frame) {
 
 int handleExecl(uint32_t* frame) {
     // int execl(const char* path, const char* arg0, ...)
+    Debug::panic("*** Calling execl!\n");
     return 0;
 }
 

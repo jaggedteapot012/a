@@ -23,7 +23,7 @@ public:
     AddressSpace *addressSpace;
     virtual void start() = 0;
     virtual uint32_t interruptEsp() = 0;
-    Process* process;
+    StrongPtr<Process> process;
     Thread();
     virtual ~Thread() {};
 
