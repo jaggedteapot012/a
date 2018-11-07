@@ -36,20 +36,14 @@ FileDescriptor* Process::getFD(int32_t fd) {
     return fds+fd;
 }
 
-int32_t Process::allocFD(bool dir) {
-    // If dir (direction) is true, find lowest available, 
-    // otherwise highest. Needed because t0 requires first 
-    // file to be fd 3, but sem is called first.
+int32_t Process::allocFD(bool isSem) {
+    // Sems start at higher fd value.
 
-    if (dir) {
-        for (uint32_t i = 0; i < MAX_FDS; i++)
-            if (fds[i].filetype == EMPTY)
-                return i;
-    } else {
-        for (uint32_t i = MAX_FDS-1; i >= 0; i--)
-            if (fds[i].filetype == EMPTY)
-                return i;
-    }
+    uint32_t min = isSem ? MAX_FDS - 10 : 0;
+    uint32_t max = isSem ? MAX_FDS : MAX_FDS - 10;
+    for (uint32_t i = min; i < max; i++)
+        if (fds[i].filetype == EMPTY)
+            return i;
 
     Debug::panic("*** ran out of file descriptors\n");
     return -1;
@@ -58,7 +52,7 @@ int32_t Process::allocFD(bool dir) {
 int32_t Process::newFile(StrongPtr<Node> file) {
     Locker x(pLock);
 
-    int32_t fd = allocFD(true);    
+    int32_t fd = allocFD(false);    
     fds[fd].filetype = file_t;
     fds[fd].file = file;
     return fd;
@@ -66,7 +60,7 @@ int32_t Process::newFile(StrongPtr<Node> file) {
 
 int32_t Process::newSem(StrongPtr<Semaphore> sem) {
     Locker x(pLock);
-    int32_t fd = allocFD(false);    
+    int32_t fd = allocFD(true);    
     fds[fd].filetype = sem_t;
     fds[fd].semaphore = sem;
     return fd;
@@ -75,9 +69,9 @@ int32_t Process::newSem(StrongPtr<Semaphore> sem) {
 int32_t Process::closeFD(int32_t fd) {
     Locker x(pLock);
 
-    // Find fd, return -1 if not exist or invalid.
+    // Find fd, return -1 if not exist or already empty.
     auto FD = getFD(fd);
-    if (FD == nullptr || (FD->filetype != file_t && FD->filetype != sem_t)) {
+    if (FD == nullptr || FD->filetype == EMPTY) {
         return -1;
     }
 

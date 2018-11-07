@@ -90,20 +90,17 @@ int handleWrite(uint32_t* frame) {
     uint32_t len = frame[3];
 
     uint32_t bytesWritten = 0;
+    FileDescriptor* FD = activeProcess()->getFD(fd);
     
-    if (fd == 1 || fd == 2) {
+    if (FD->filetype == STDIN || FD->filetype == STDOUT) {
         // For writing to stdout and stderr.
         char* buffer = (char*) buf;
         while (bytesWritten < len) {
             Debug::printf("%c", buffer[bytesWritten++]);
         }
-    } else {
-        // For writing to a file.
-        FileDescriptor* FD = activeProcess()->getFD(fd);
-        if (FD == nullptr || FD->filetype != file_t)
-            return -1;
-        bytesWritten = FD->file->writeAll(FD->offset, buf, len);
-    }
+    } else 
+        // Not suppporting write to files.
+        return -1;
 
     return (int) bytesWritten;
 }
@@ -167,10 +164,6 @@ int handleClose(uint32_t* frame) {
     // int close(int id)
     int fd = frame[1];
 
-    FileDescriptor* FD = activeProcess()->getFD(fd);
-    if (FD == nullptr || (FD->filetype != file_t && FD->filetype != sem_t))
-        return -1;
-
     // Free index in FD table.
     return activeProcess()->closeFD(fd);
 }
@@ -211,8 +204,10 @@ int handleLen(uint32_t* frame) {
     // int len(int fs)
     int fd = frame[1];
     FileDescriptor* FD = activeProcess()->getFD(fd);
+
     if (FD == nullptr || FD->filetype != file_t)
         return -1;
+
     return FD->file->getSize();
 }
 
@@ -221,10 +216,6 @@ int handleRead(uint32_t* frame) {
     int fd = frame[1];
     void* buf = (void*) frame[2];
     uint32_t len = frame[3];
-
-    // Cannot read from STDIN/STDOUT
-    if (fd < 3)
-        return -1;
 
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
@@ -241,10 +232,6 @@ int handleSeek(uint32_t* frame) {
     // int32_t seek(int fd, int32_t off)
     int fd = frame[1];
     int off = frame[2];
-
-    // Cannot seek in STDIN/STDOUT
-    if (fd < 3)
-        return -1;
 
     FileDescriptor* FD = activeProcess()->getFD(fd);
     if (FD == nullptr || FD->filetype != file_t)
