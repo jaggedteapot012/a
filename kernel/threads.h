@@ -26,26 +26,30 @@ public:
     Process* process;
     Thread();
     virtual ~Thread() {};
-    
-    Thread(Thread* parent) {
-        addressSpace = parent->addressSpace->copy();
-        process = parent->process->copy();
-    }
+
 };
 
 template <typename T>
 class ThreadImpl : public Thread {
     T work;
-public:
     long stack[2048];
+public:
     virtual void start() override {
         work();
     }
+
     virtual uint32_t interruptEsp() override {
         return (uint32_t) &stack[2046];
     }
+
     ThreadImpl(T work) : work(work) {}
-    virtual ~ThreadImpl() {
+    virtual ~ThreadImpl() {}
+
+    ThreadImpl(T work, Thread* parent) : work(work) {
+        addressSpace = parent->addressSpace->copy();
+        process = parent->process->copy();
+        // TODO: not sure that we need this
+        //memcpy(stack, parent->stack, 8192);
     }
 };
 

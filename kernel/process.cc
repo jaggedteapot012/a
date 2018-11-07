@@ -85,6 +85,11 @@ int32_t Process::closeFD(int32_t fd) {
 
 Process* Process::copy() {
     Process* result = new Process();
-    memcpy(result->fds, fds, MAX_FDS*sizeof(FileDescriptor));
+    for (uint32_t i = 0; i < MAX_FDS; i++) {
+        result->fds[i].filetype = fds[i].filetype;
+        result->fds[i].file = fds[i].file;
+        result->fds[i].semaphore = fds[i].semaphore;
+        result->fds[i].offset = fds[i].offset;
+    }
     return result;
 }

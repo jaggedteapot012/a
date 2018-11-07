@@ -8,6 +8,7 @@
 #include "heap.h"
 #include "libk.h"
 #include "kernel.h"
+#include "threads.h"
 
 #define assert Debug::assert
 #define fs kernelState->kernelFS
@@ -105,8 +106,17 @@ int handleWrite(uint32_t* frame) {
     return (int) bytesWritten;
 }
 
-int handleFork() {
+extern Thread* active();
+extern void schedule(Thread*);
+
+int handleFork(uint32_t* intFrame) {
     // int fork()
+    // TODO: find return pc and esp
+    auto child = new ThreadImpl([pc, esp] {
+        switchToUser(pc, esp, 0);     
+    });
+    schedule(child);
+    // TODO: should return pid of child
     return 0;
 }
 
@@ -230,14 +240,14 @@ int handleSeek(uint32_t* frame) {
     return off;
 }
 
-extern "C" int sysHandler(uint32_t eax, uint32_t *frame) {
-    frame = (uint32_t*) frame[3];
+extern "C" int sysHandler(uint32_t eax, uint32_t *intFrame) {
+    uint32_t* frame = (uint32_t*) intFrame[3];
     int ret;
 
     switch (eax) {
         case 0: ret = handleExit(frame); break;
         case 1: fsLock.lock(); ret = handleWrite(frame); fsLock.unlock(); break;
-        case 2: ret = handleFork(); break;
+        case 2: ret = handleFork(intFrame); break;
         case 3: ret = handleSem(frame); break;
         case 4: ret = handleUp(frame); break;
         case 5: ret = handleDown(frame); break;
