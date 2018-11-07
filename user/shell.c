@@ -6,7 +6,10 @@ int main(int argc, char** argv) {
         printf("*** argv[%d]=%s\n",i,argv[i]);
     }
 
-    cp(3,1);
+    uint32_t* ptr = (uint32_t*) 0xa0000000;
+    printf("*** Memory should be zero filled: %lu\n", *ptr);
+
+    cp(3, 1);
 
     return 0;
 }

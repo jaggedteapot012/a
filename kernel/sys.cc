@@ -101,9 +101,12 @@ int handleWrite(uint32_t* frame) {
         while (bytesWritten < len) {
             Debug::printf("%c", buffer[bytesWritten++]);
         }
-    } else 
-        // Not suppporting write to files.
+    } else if (FD->filetype == file_t) {
+        // For writing to files.
+        bytesWritten = FD->file->writeAll(FD->offset, buf, len);
+    } else {
         return -1;
+    }
 
     return (int) bytesWritten;
 }
@@ -203,7 +206,7 @@ int handleExecl(uint32_t* frame) {
     for (i = 2; i < 2+numArgs; i++) {
         args[i-2] = parseString((char*) frame[i], 0);
     }
-    
+
     Thread* me = active();
     me->addressSpace->erase();
     uint32_t e = ELF::load(exec);
