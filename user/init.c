@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     /* Test that execl keeps fd table. */
     fd = open("/etc/extra.txt",0);
     check(fd, "failed to open file!");
-    check(seek(fd, len(fd)), "failed to seek!");
+    check(seek(fd, 20), "failed to seek!");
 
     char extra[14] = "*** OrEaDlY?\n";
 
